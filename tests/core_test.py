@@ -79,6 +79,7 @@ class CoreTestCase(unittest.TestCase):
         assert resources == utils.load_json('tree_limit.json')
         # todo: add test for nested resource
         # todo: add test for offset
+        # todo: add test for case that commit has no parent
 
     def test_get_commits(self):
         commits = core.get_commits(utils.EXPECTED_PROJECT,

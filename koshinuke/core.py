@@ -96,16 +96,15 @@ def get_resources(project, repository, rev, path='', offset=0, limit=100):
                'children': len(t.blobs) + len(t.trees),
                'type': 'tree'} for t in trees.values()]
     if not commit.parents:
-        result.extend([_blobdata(b, commit, rev) for b in commit.tree.blobs])
+        result.extend([_blobdata(b, commit, rev) for b in blobs.values()])
     else:
         for c in chain([commit], commit.iter_parents()):
             if not blobs:
                 break
             for changed_path in c.stats.files.keys():
                 b = blobs.pop(changed_path, None)
-                if not b:  # changed_path not in resouces
-                    continue
-                result.append(_blobdata(b, c, rev))
+                if b:  # there is changed_path in resouces
+                    result.append(_blobdata(b, c, rev))
     return result
 
 
