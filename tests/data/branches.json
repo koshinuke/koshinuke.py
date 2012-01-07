@@ -1,0 +1,21 @@
+{
+    "path": "testproject/testrepo",
+    "host": "example.com",
+    "branches": [
+        {
+            "path": "develop",
+            "message": "2nd%20commit.%0A",
+            "author": "knauthor",
+            "name": "develop",
+            "timestamp": 1325829170
+        },
+        {
+            "path": "master",
+            "message": "3rd%20commit.%0A",
+            "author": "knauthor",
+            "name": "master",
+            "timestamp": 1325836845
+        }
+    ],
+    "name": "testrepo"
+}

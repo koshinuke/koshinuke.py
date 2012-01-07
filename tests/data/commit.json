@@ -1,0 +1,32 @@
+{
+    "stats": {
+        "files": {
+            "sample.py": {
+                "deletions": 0,
+                "lines": 1,
+                "insertions": 1
+            }
+        },
+        "total": {
+            "deletions": 0,
+            "lines": 1,
+            "insertions": 1,
+            "files": 1
+        }
+    },
+    "parent": [
+        "77fa56bf06640565b8ca142605c0162b61f2a6e3"
+    ],
+    "author": "knauthor",
+    "timestamp": 1325829170,
+    "diff": [
+        {
+            "b_path": "sample.py",
+            "patch": "---%20a/sample.py%0A%2B%2B%2B%20/dev/null%0A%40%40%20-1%20%2B0%2C0%20%40%40%0A-print%28%22I%20am%20koshinuke%21%22%29%0A",
+            "operation": "add",
+            "a_path": "sample.py"
+        }
+    ],
+    "commit": "98d540096e7d21f2e53b4e799fb851715ed17e85",
+    "message": "2nd%20commit.%0A"
+}
