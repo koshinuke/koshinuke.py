@@ -203,6 +203,7 @@ def create_repository(project, repository, readme=None):
         readme = Config.DEFAULT_README
     update_resource(project, repository, 'master', 'README', readme,
                     Config.CREATE_MESSAGE)
+    # todo: chgrp Config.USER_GROUP and chmod for write permission.
 
 
 def _get_ref(project, repository, ref, offset=0, limit=100):

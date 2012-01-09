@@ -31,6 +31,10 @@ EXPECTED_REV = '98d540096e7d21f2e53b4e799fb851715ed17e85'
 EXPECTED_LIMIT = 1
 EXPECTED_HOST = 'example.com'
 
+EXPECTED_USERNAME = 'testuser'
+EXPECTED_PASSWORD = 'testpassword'
+EXPECTED_AUTH_KEY = 'ssh-rsa //KOSHINUKE+DUMMY+SSH+KEY// koshinuke@example.com'
+
 
 def create_test_project(project=None):
     os.mkdir(_test_project_path(project))

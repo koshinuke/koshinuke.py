@@ -11,11 +11,13 @@
 
 
 class BaseConfig(object):
-    EXCLUDED_PROJECTS = ['bin', 'lib', 'lib64', 'usr']
+    USER_GROUP = 'knusers'
 
     CREATE_MESSAGE = "create repository."
     DEFAULT_COMMIT_MESSAGE = "updated by koshinuke."
     DEFAULT_README = "hello world!"
+
+    EXCLUDED_PROJECTS = ['bin', 'lib', 'lib64', 'usr']
 
 
 class ProductionConfig(BaseConfig):
@@ -26,6 +28,8 @@ class ProductionConfig(BaseConfig):
     PROJECT_ROOT = '<koshinuke_project_root>'
     SYSTEM_AUTHOR = '<system_author>'
     SYSTEM_MAILADDRESS = '<system_mailaddress>'
+
+    FIXED_SALT = '<fixed_salt_for_password_encryption>'
 
     LOGFILE = '<log_file>'
     LOGLEVEL = 'WARNING'
@@ -39,6 +43,8 @@ class DevelopmentConfig(BaseConfig):
     PROJECT_ROOT = '/var/koshinuke/'
     SYSTEM_AUTHOR = 'koshinuke'
     SYSTEM_MAILADDRESS = 'koshinuke@example.com'
+
+    FIXED_SALT = 'koshinuke_fixed_salt'
 
     LOGFILE = 'koshinuke.log'
     LOGLEVEL = 'DEBUG'

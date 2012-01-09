@@ -11,10 +11,13 @@
 
 import unittest
 
+import auth_test
 import core_test
 import koshinuke_test
 
 
 if __name__ == '__main__':
-    alltests = unittest.TestSuite([core_test.suite(), koshinuke_test.suite()])
+    alltests = unittest.TestSuite([auth_test.suite(),
+                                   core_test.suite(),
+                                   koshinuke_test.suite()])
     unittest.TextTestRunner(verbosity=2).run(alltests)
