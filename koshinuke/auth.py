@@ -10,6 +10,7 @@
 """
 
 from crypt import crypt
+import hashlib
 import os
 from pwd import getpwnam
 from spwd import getspnam
@@ -25,7 +26,9 @@ def authenticate(username, password):
         # User is not existed, or koshinuke app is not permitted
         # to access shadow password database.
         return False
-    return _get_encrypted_password(username, password) == encrypted_password
+    hashed_pass = hashlib.sha1()
+    hashed_pass.update(password + encrypted_password[:40])
+    return encrypted_password[40:] == hashed_pass.hexdigest()
 
 
 def add_user(username, password, auth_key):
@@ -34,7 +37,7 @@ def add_user(username, password, auth_key):
     """
     home_dir = os.path.join('/home', '{0}'.format(username))  # fixme
     call(['useradd',
-          '--password', _get_encrypted_password(username, password),
+          '--password', _generate_encrypted_password(username, password),
           '--home-dir', home_dir, '--create-home',
           '--groups', Config.USER_GROUP,
           '--shell', '/bin/bash',
@@ -59,8 +62,24 @@ def remove_user(username):
     call(['userdel', '--remove', username])
 
 
-def _get_encrypted_password(username, password):
-    return crypt(password, _get_salt(username))
+def _generate_encrypted_password(username, password):
+    # todo: check security. is secure really? to more secure.
+    # ref. http://pyramid.chromaticleaves.com/simpleauth/
+    if isinstance(password, unicode):
+        password_8bit = password.encode('utf-8')
+    else:
+        password_8bit = password
+
+    salt = hashlib.sha1()
+    salt.update(os.urandom(60))
+    hash = hashlib.sha1()
+    hash.update(password_8bit + salt.hexdigest())
+    hashed_password = salt.hexdigest() + hash.hexdigest()
+
+    if not isinstance(hashed_password, unicode):
+        hashed_password = hashed_password.decode('utf-8')
+
+    return hashed_password
 
 
 def _get_salt(username):
