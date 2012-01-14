@@ -9,13 +9,14 @@
     :license: Apache License, Version 2.0, see LICENSE for more details.
 """
 
-import json
 import logging
 from logging import FileHandler
 import os
 
 from flask import (Flask, request, render_template, abort, redirect, url_for,
                    session)
+from flaskext.kvsession import KVSessionExtension
+from simplekv.memory import DictStore
 from werkzeug import SharedDataMiddleware
 
 from config import Config
@@ -23,8 +24,13 @@ from core import (get_projects, get_repositories,
                   get_resource, get_resources, get_branches, get_tags,
                   get_history, get_commits, get_commit, update_resource,
                   NotFoundError, CanNotUpdateError)
+from auth import authenticate
+from utils import jsonify, generate_csrf_token
 
 app = Flask(__name__)
+
+store = DictStore()
+KVSessionExtension(store, app)
 
 # configuration
 app.config.from_object(Config)
@@ -35,12 +41,10 @@ handler.setLevel(logging.__getattribute__(app.config['LOGLEVEL']))
 app.logger.addHandler(handler)
 
 
-def jsonify(data):
-    return json.dumps(data, ensure_ascii=False)
-
-
 @app.before_request
 def before_request():
+    # todo: check login
+    # todo: check csrf here
     if not app.testing:
         app.logger.info("access {0} from {1}".format(request.url,
                                                      request.remote_addr))
@@ -54,16 +58,49 @@ def after_request(response):
 
 @app.route('/')
 def index():
-    if not request.is_xhr:
-        return app.send_static_file('repos.html')
-    resources = []
-    for project in get_projects():
-        for repository in get_repositories(project):
-            resource = {}
-            resource.update(get_branches(project, repository))
-            resource.update(get_tags(project, repository))
-            resources.append(resource)
-    return jsonify(resources)
+    if not 'username' in session:
+        csrf_token = generate_csrf_token()
+        session['csrf_token'] = csrf_token
+        return render_template('login.html', csrf=csrf_token)
+    else:
+        csrf_token = generate_csrf_token()
+        session['csrf_token'] = csrf_token
+        return render_template('repos.html',
+                               csrf=csrf_token, name=session['username'])
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    csrf_token = request.form.get('t')
+    if not 'csrf_token' in session or csrf_token != session['csrf_token']:
+        abort(400)
+    username = request.form.get('u')
+    password = request.form.get('p')
+    if authenticate(username, password):
+        session.regenerate()
+        session['username'] = username
+    return redirect(url_for('index'))
+
+
+@app.route('/logout')
+def logout():
+    session.destroy()
+    return redirect(url_for('index'))
+
+
+@app.route('/dynamic/')
+def dynamic():
+    if request.headers['Accept'] == 'application/json':
+        resources = []
+        for project in get_projects():
+            for repository in get_repositories(project):
+                resource = {}
+                resource.update(get_branches(project, repository))
+                resource.update(get_tags(project, repository))
+                resources.append(resource)
+        return jsonify(resources)
+    else:
+        return redirect(url_for('index'))
 
 
 @app.route('/<project>/<repository>/branches')

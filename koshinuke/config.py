@@ -25,11 +25,11 @@ class ProductionConfig(BaseConfig):
     PORT = 80
     DEBUG = False
 
+    SECRET_KEY = '<secret_key>'
+
     PROJECT_ROOT = '<koshinuke_project_root>'
     SYSTEM_AUTHOR = '<system_author>'
     SYSTEM_MAILADDRESS = '<system_mailaddress>'
-
-    FIXED_SALT = '<fixed_salt_for_password_encryption>'
 
     LOGFILE = '<log_file>'
     LOGLEVEL = 'WARNING'
@@ -40,11 +40,11 @@ class DevelopmentConfig(BaseConfig):
     PORT = 8080
     DEBUG = True
 
+    SECRET_KEY = 'koshinuke_default_secret_key'
+
     PROJECT_ROOT = '/var/koshinuke/'
     SYSTEM_AUTHOR = 'koshinuke'
     SYSTEM_MAILADDRESS = 'koshinuke@example.com'
-
-    FIXED_SALT = 'koshinuke_fixed_salt'
 
     LOGFILE = 'koshinuke.log'
     LOGLEVEL = 'DEBUG'
