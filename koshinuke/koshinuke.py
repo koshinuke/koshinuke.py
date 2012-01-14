@@ -14,16 +14,15 @@ import logging
 from logging import FileHandler
 import os
 
-from flask import Flask, request, render_template, abort, redirect, url_for
-from flask import session
+from flask import (Flask, request, render_template, abort, redirect, url_for,
+                   session)
 from werkzeug import SharedDataMiddleware
 
 from config import Config
-from core import get_projects, get_repositories
-from core import get_resource, get_resources, get_branches, get_tags
-from core import get_history, get_commits, get_commit, update_resource
-from core import NotFoundError, CanNotUpdateError
-
+from core import (get_projects, get_repositories,
+                  get_resource, get_resources, get_branches, get_tags,
+                  get_history, get_commits, get_commit, update_resource,
+                  NotFoundError, CanNotUpdateError)
 
 app = Flask(__name__)
 
