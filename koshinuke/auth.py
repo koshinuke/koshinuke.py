@@ -37,7 +37,7 @@ def add_user(username, password, auth_key):
     """
     home_dir = os.path.join('/home', '{0}'.format(username))  # fixme
     call(['useradd',
-          '--password', _generate_encrypted_password(username, password),
+          '--password', _generate_encrypted_password(password),
           '--home-dir', home_dir, '--create-home',
           '--groups', Config.USER_GROUP,
           '--shell', '/bin/bash',
@@ -62,7 +62,7 @@ def remove_user(username):
     call(['userdel', '--remove', username])
 
 
-def _generate_encrypted_password(username, password):
+def _generate_encrypted_password(password):
     # todo: check security. is secure really? to more secure.
     # ref. http://pyramid.chromaticleaves.com/simpleauth/
     if isinstance(password, unicode):
@@ -80,10 +80,6 @@ def _generate_encrypted_password(username, password):
         hashed_password = hashed_password.decode('utf-8')
 
     return hashed_password
-
-
-def _get_salt(username):
-    return ''.join([username, Config.FIXED_SALT])
 
 
 class PermissionError(Exception):
