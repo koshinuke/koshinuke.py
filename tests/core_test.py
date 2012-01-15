@@ -21,7 +21,50 @@ from koshinuke import core
 from koshinuke.config import Config
 
 
-class CoreTestCase(unittest.TestCase):
+class CreateTestCase(unittest.TestCase):
+
+    def setUp(self):
+        utils.add_test_user()
+
+    def tearDown(self):
+        try:
+            utils.destroy_test_repository()
+            utils.destroy_test_project()
+        except OSError:  # not exists
+            pass
+        utils.remove_test_user()
+
+    def test_create_project(self):
+        core.create_project(utils.EXPECTED_PROJECT, utils.EXPECTED_USERNAME)
+        assert utils.exists_test_project()
+
+    def test_create_repository(self):
+        core.create_repository(utils.EXPECTED_PROJECT,
+                               utils.EXPECTED_REPOSITORY,
+                               utils.EXPECTED_USERNAME)
+        assert utils.exists_test_repository()
+
+
+class UpdateTestCase(unittest.TestCase):
+
+    def setUp(self):
+        utils.create_test_project()
+        utils.create_test_repository()
+
+    def tearDown(self):
+        utils.destroy_test_repository()
+        utils.destroy_test_project()
+
+    def test_update_resource(self):
+        parent = utils.get_test_current_rev()
+        content = 'updated by test.'
+        core.update_resource(utils.EXPECTED_PROJECT, utils.EXPECTED_REPOSITORY,
+                             utils.EXPECTED_BRANCH, utils.EXPECTED_RESOURCE,
+                             content, parent=parent)
+        assert utils.get_test_blob_content() == content
+
+
+class GetTestCase(unittest.TestCase):
 
     def setUp(self):
         utils.create_test_project()
@@ -122,25 +165,13 @@ class CoreTestCase(unittest.TestCase):
         tags['host'] = utils.EXPECTED_HOST
         assert tags == utils.load_json('tags.json')
 
-    def test_update_resource(self):
-        parent = utils.get_test_current_rev()
-        content = 'updated by test.'
-        core.update_resource(utils.EXPECTED_PROJECT, utils.EXPECTED_REPOSITORY,
-                             utils.EXPECTED_BRANCH, utils.EXPECTED_RESOURCE,
-                             content, parent=parent)
-        assert utils.get_test_blob_content() == content
-
-    def test_create_repository(self):
-        utils.destroy_test_project()
-        core.create_repository(utils.EXPECTED_PROJECT,
-                               utils.EXPECTED_REPOSITORY)
-        assert utils.get_test_repository()
-
 
 def suite():
     suite = unittest.TestSuite()
     loader = unittest.TestLoader()
-    suite.addTest(loader.loadTestsFromTestCase(CoreTestCase))
+    suite.addTest(loader.loadTestsFromTestCase(CreateTestCase))
+    suite.addTest(loader.loadTestsFromTestCase(UpdateTestCase))
+    suite.addTest(loader.loadTestsFromTestCase(GetTestCase))
     return suite
 
 

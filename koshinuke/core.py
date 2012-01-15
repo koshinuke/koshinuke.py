@@ -10,8 +10,10 @@
 """
 
 from datetime import datetime, timedelta
+from grp import getgrnam
 from itertools import chain
 import os
+from pwd import getpwnam
 from shutil import rmtree
 from tempfile import mkdtemp
 from time import mktime
@@ -197,14 +199,32 @@ def update_resource(project, repository, rev, path, content, message=None,
     rmtree(cloned_repository_path)
 
 
-def create_repository(project, repository, readme=None):
-    repo = Repo.init(_get_repository_path(project, repository), bare=True)
+def create_repository(project, repository, username, readme=None):
+    path = _get_repository_path(project, repository)
+    repo = Repo.init(path, bare=True)
     if not readme:
         readme = Config.DEFAULT_README
     update_resource(project, repository, 'master', 'README', readme,
                     Config.CREATE_MESSAGE)
-    # todo: chgrp Config.USER_GROUP and chmod for write permission.
+    uid = getpwnam(username)[2]
+    gid = getgrnam(Config.USER_GROUP)[2]
+    for root, dirs, files in os.walk(path):
+        for d in dirs:
+            os.chown(os.path.join(root, d), uid, gid)
+            os.chmod(os.path.join(root, d), 0770)
+        for f in files:
+            os.chown(os.path.join(root, f), uid, gid)
+            os.chmod(os.path.join(root, f), 0660)
 
+
+def create_project(project, username):
+    path = _get_project_path(project)
+    os.mkdir(path)
+    uid = getpwnam(username)[2]
+    gid = getgrnam(Config.USER_GROUP)[2]
+    os.chown(path, uid, gid)
+    os.chmod(path, 0770)
+    
 
 def _get_ref(project, repository, ref, offset=0, limit=100):
     return {'host': Config.HOST,

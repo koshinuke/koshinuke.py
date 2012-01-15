@@ -11,7 +11,9 @@
 
 import json
 import os
+from pwd import getpwnam
 from shutil import rmtree
+from subprocess import call
 import sys
 
 from git import Repo
@@ -63,6 +65,29 @@ def get_test_current_rev():
 def get_test_blob_content():
     repo = get_test_repository()
     return repo.commit().tree[EXPECTED_RESOURCE].data_stream.read()
+
+
+def exists_test_project():
+    return os.path.exists(_test_project_path())
+
+
+def exists_test_repository():
+    return os.path.exists(_test_repository_path())
+
+
+def add_test_user():
+    home_dir = os.path.join('/home', '{0}'.format(EXPECTED_USERNAME))
+    call(['useradd',
+          '--password', EXPECTED_PASSWORD,
+          '--home-dir', home_dir, '--create-home',
+          '--groups', Config.USER_GROUP,
+          '--shell', '/bin/bash',
+          EXPECTED_USERNAME])
+    uid, gid = getpwnam(EXPECTED_USERNAME)[2:4]
+
+
+def remove_test_user():
+    call(['userdel', '--remove', EXPECTED_USERNAME])
 
 
 def load_json(filename):
