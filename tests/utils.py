@@ -23,6 +23,7 @@ data_dir = os.path.join(here, 'data')
 
 sys.path.append(os.path.join(here, '..'))
 
+from koshinuke import auth
 from koshinuke.config import Config
 
 EXPECTED_PROJECT = 'testproject'
@@ -78,12 +79,12 @@ def exists_test_repository():
 def add_test_user():
     home_dir = os.path.join('/home', '{0}'.format(EXPECTED_USERNAME))
     call(['useradd',
-          '--password', EXPECTED_PASSWORD,
+          '--password', auth._generate_encrypted_password(EXPECTED_PASSWORD),
           '--home-dir', home_dir, '--create-home',
           '--groups', Config.USER_GROUP,
           '--shell', '/bin/bash',
           EXPECTED_USERNAME])
-    uid, gid = getpwnam(EXPECTED_USERNAME)[2:4]
+    # todo: should not use 'auth._generate_encrypted_password' for test
 
 
 def remove_test_user():

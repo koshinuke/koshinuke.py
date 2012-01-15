@@ -9,6 +9,7 @@
     :license: Apache License, Version 2.0, see LICENSE for more details.
 """
 
+from HTMLParser import HTMLParser
 import json
 import os
 import sys
@@ -23,26 +24,79 @@ from koshinuke.config import Config
 
 
 def get_path(path):
-    paths = ['', utils.EXPECTED_PROJECT, utils.EXPECTED_REPOSITORY]
+    paths = ['', 'dynamic', utils.EXPECTED_PROJECT, utils.EXPECTED_REPOSITORY]
     paths.extend(path)
     return '/'.join(paths)
 
 
-class KoshinukeTestCase(unittest.TestCase):
+class CsrfTokenExtractor(HTMLParser):
+
+    def __init__(self, key, value):
+        HTMLParser.__init__(self)
+        self.key = key
+        self.value = value
+        self.csrf_token = ''
+
+    def handle_starttag(self, tag, _attrs):
+        attrs = dict(_attrs)
+        if tag == 'input' and \
+           self.key in attrs and attrs.get(self.key) == self.value:
+            self.csrf_token = attrs.get('value')
+
+
+def get_csrf_token(data, attr, value):
+    extractor = CsrfTokenExtractor(attr, value)
+    extractor.feed(data)
+    extractor.close()
+    return extractor.csrf_token
+
+
+def login(app):
+    csrf_token = get_csrf_token(app.get('/').data, 'name', 't')
+    data = {'u': utils.EXPECTED_USERNAME, 'p': utils.EXPECTED_PASSWORD,
+            't': csrf_token}
+    return app.post('/login', data=data, follow_redirects=True)
+
+
+class BeforeLoginTestCase(unittest.TestCase):
 
     def setUp(self):
+        utils.add_test_user()
+
         koshinuke.app.config['TESTING'] = True
         self.app = koshinuke.app.test_client()
+
+    def tearDown(self):
+        utils.remove_test_user()
+
+    def test_index(self):
+        rv = self.app.get('/')
+        assert 'Login' in  rv.data
+
+    def test_login(self):
+        rv = login(self.app)
+        assert 'Home' in  rv.data
+
+    def test_init(self):
+        # todo: implement
+        pass
+
+
+class AfterLoginTestCase(unittest.TestCase):
+
+    def setUp(self):
+        utils.add_test_user()
         utils.create_test_project()
         utils.create_test_repository()
+
+        koshinuke.app.config['TESTING'] = True
+        self.app = koshinuke.app.test_client()
+        login(self.app)
 
     def tearDown(self):
         utils.destroy_test_repository()
         utils.destroy_test_project()
-
-    def test_index(self):
-        rv = self.app.get('/')
-        assert 'KoshiNuke' in  rv.data
+        utils.remove_test_user()
 
     def test_branches(self):
         rv = self.app.get(get_path(['branches']))
@@ -58,7 +112,6 @@ class KoshinukeTestCase(unittest.TestCase):
 
     def test_tree_root(self):
         path = get_path(['tree', utils.EXPECTED_BRANCH])
-
         rv = self.app.get(path)
         assert json.loads(rv.data) == utils.load_json('tree.json')
 
@@ -125,7 +178,8 @@ class KoshinukeTestCase(unittest.TestCase):
 def suite():
     suite = unittest.TestSuite()
     loader = unittest.TestLoader()
-    suite.addTest(loader.loadTestsFromTestCase(KoshinukeTestCase))
+    suite.addTest(loader.loadTestsFromTestCase(BeforeLoginTestCase))
+    suite.addTest(loader.loadTestsFromTestCase(AfterLoginTestCase))
     return suite
 
 
