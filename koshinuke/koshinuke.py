@@ -23,6 +23,7 @@ from config import Config
 from core import (get_projects, get_repositories,
                   get_resource, get_resources, get_branches, get_tags,
                   get_history, get_commits, get_commit, update_resource,
+                  create_project, create_repository,
                   NotFoundError, CanNotUpdateError)
 from auth import authenticate
 from utils import jsonify, generate_csrf_token
@@ -39,6 +40,17 @@ app.config.from_object(Config)
 handler = FileHandler(app.config['LOGFILE'], encoding='utf-8')
 handler.setLevel(logging.__getattribute__(app.config['LOGLEVEL']))
 app.logger.addHandler(handler)
+
+
+def get_initial_resources():
+    resources = []
+    for project in get_projects():
+        for repository in get_repositories(project):
+            resource = {}
+            resource.update(get_branches(project, repository))
+            resource.update(get_tags(project, repository))
+            resources.append(resource)
+    return resources
 
 
 @app.before_request
@@ -88,43 +100,55 @@ def logout():
     return redirect(url_for('index'))
 
 
+@app.route('/dynamic', methods=['POST'])
+def init():
+    # check login
+    if not 'X-KoshiNuke' in request.headers or \
+       request.headers['X-KoshiNuke'] != session['csrf_token']:
+        abort(400)
+    project_and_repo_name = request.form.get('rn')
+    readme = request.form.get('rr')
+
+    separator = project_and_repo_name.find('/')
+    project = project_and_repo_name[:separator]
+    repository = project_and_repo_name[separator + 1:]
+    username = session['username']
+
+    create_project(project, username)
+    create_repository(project, repository, username, readme)
+    return jsonify(get_initial_resources())
+
+
 @app.route('/dynamic/')
 def dynamic():
     if request.headers['Accept'] == 'application/json':
-        resources = []
-        for project in get_projects():
-            for repository in get_repositories(project):
-                resource = {}
-                resource.update(get_branches(project, repository))
-                resource.update(get_tags(project, repository))
-                resources.append(resource)
-        return jsonify(resources)
+        return jsonify(get_initial_resources())
     else:
         return redirect(url_for('index'))
 
 
-@app.route('/<project>/<repository>/branches')
+@app.route('/dynamic/<project>/<repository>/branches')
 def branches(project, repository):
     offset = request.args.get('offset', 0, type=int)
     limit = request.args.get('limit', 100, type=int)
     return jsonify(get_branches(project, repository, offset, limit))
 
 
-@app.route('/<project>/<repository>/tags')
+@app.route('/dynamic/<project>/<repository>/tags')
 def tags(project, repository):
     offset = request.args.get('offset', 0, type=int)
     limit = request.args.get('limit', 100, type=int)
     return jsonify(get_tags(project, repository, offset, limit))
 
 
-@app.route('/<project>/<repository>/tree/<rev>')
+@app.route('/dynamic/<project>/<repository>/tree/<rev>')
 def tree_root(project, repository, rev):
     offset = request.args.get('offset', 0, type=int)
     limit = request.args.get('limit', 100, type=int)
     return jsonify(get_resources(project, repository, rev, '', offset, limit))
 
 
-@app.route('/<project>/<repository>/tree/<rev>/<path:path>')
+@app.route('/dynamic/<project>/<repository>/tree/<rev>/<path:path>')
 def tree(project, repository, rev, path):
     offset = request.args.get('offset', 0, type=int)
     limit = request.args.get('limit', 100, type=int)
@@ -132,7 +156,7 @@ def tree(project, repository, rev, path):
                                  offset, limit))
 
 
-@app.route('/<project>/<repository>/blob/<rev>/<path:path>',
+@app.route('/dynamic/<project>/<repository>/blob/<rev>/<path:path>',
            methods=['GET', 'POST'])
 def blob(project, repository, rev, path):
     if request.method == 'GET':
@@ -146,19 +170,19 @@ def blob(project, repository, rev, path):
         return 'Resouce is updated successfully.', 200
 
 
-@app.route('/<project>/<repository>/history')
+@app.route('/dynamic/<project>/<repository>/history')
 def history(project, repository):
     return jsonify(get_history(project, repository))
 
 
-@app.route('/<project>/<repository>/commits/<ref>')
+@app.route('/dynamic/<project>/<repository>/commits/<ref>')
 def commits_root(project, repository, ref):
     rev = request.args.get('commit', None)
     limit = request.args.get('limit', 30, type=int)
     return jsonify(get_commits(project, repository, ref, rev, limit=limit))
 
 
-@app.route('/<project>/<repository>/commits/<ref>/<path:path>')
+@app.route('/dynamic/<project>/<repository>/commits/<ref>/<path:path>')
 def commits(project, repository, ref, path):
     rev = request.args.get('commit', None)
     limit = request.args.get('limit', 30, type=int)
@@ -166,7 +190,7 @@ def commits(project, repository, ref, path):
                                path, limit=limit))
 
 
-@app.route('/<project>/<repository>/commit/<rev>')
+@app.route('/dynamic/<project>/<repository>/commit/<rev>')
 def commit(project, repository, rev):
     return jsonify(get_commit(project, repository, rev))
 
