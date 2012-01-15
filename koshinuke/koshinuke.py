@@ -9,9 +9,12 @@
     :license: Apache License, Version 2.0, see LICENSE for more details.
 """
 
+import hashlib
+import json
 import logging
 from logging import FileHandler
 import os
+import random
 import re
 
 from flask import (Flask, request, render_template, abort, redirect, url_for,
@@ -21,13 +24,9 @@ from simplekv.memory import DictStore
 from werkzeug import SharedDataMiddleware
 
 from config import Config
-from core import (get_projects, get_repositories,
-                  get_resource, get_resources, get_branches, get_tags,
-                  get_history, get_commits, get_commit, update_resource,
-                  create_project, create_repository,
-                  NotFoundError, CanNotUpdateError)
+import core
+from core import NotFoundError, CanNotUpdateError
 from auth import authenticate
-from utils import jsonify, generate_csrf_token
 
 app = Flask(__name__)
 
@@ -42,17 +41,32 @@ handler = FileHandler(app.config['LOGFILE'], encoding='utf-8')
 handler.setLevel(logging.__getattribute__(app.config['LOGLEVEL']))
 app.logger.addHandler(handler)
 
-
+# constants and helper functions
 PUBLIC_PATH = re.compile(r'/|/login|/static/.*|/favicon.ico')
+_MAX_CSRF_KEY = 18446744073709551616L
+if hasattr(random, 'SystemRandom'):
+    randrange = random.SystemRandom().randrange
+else:
+    randrange = random.randrange
+
+
+def jsonify(data):
+    return json.dumps(data, ensure_ascii=False)
+
+
+def generate_csrf_token():
+    # see Flask-SeaSurf http://packages.python.org/Flask-SeaSurf/
+    salt = (randrange(0, _MAX_CSRF_KEY), Config.SECRET_KEY)
+    return str(hashlib.sha1('{0}{1}'.format(*salt)).hexdigest())
 
 
 def get_initial_resources():
     resources = []
-    for project in get_projects():
-        for repository in get_repositories(project):
+    for project in core.get_projects():
+        for repository in core.get_repositories(project):
             resource = {}
-            resource.update(get_branches(project, repository))
-            resource.update(get_tags(project, repository))
+            resource.update(core.get_branches(project, repository))
+            resource.update(core.get_tags(project, repository))
             resources.append(resource)
     return resources
 
@@ -118,8 +132,8 @@ def init():
     repository = project_and_repo_name[separator + 1:]
     username = session['username']
 
-    create_project(project, username)
-    create_repository(project, repository, username, readme)
+    core.create_project(project, username)
+    core.create_repository(project, repository, username, readme)
     return jsonify(get_initial_resources())
 
 
@@ -135,68 +149,70 @@ def dynamic():
 def branches(project, repository):
     offset = request.args.get('offset', 0, type=int)
     limit = request.args.get('limit', 100, type=int)
-    return jsonify(get_branches(project, repository, offset, limit))
+    return jsonify(core.get_branches(project, repository, offset, limit))
 
 
 @app.route('/dynamic/<project>/<repository>/tags')
 def tags(project, repository):
     offset = request.args.get('offset', 0, type=int)
     limit = request.args.get('limit', 100, type=int)
-    return jsonify(get_tags(project, repository, offset, limit))
+    return jsonify(core.get_tags(project, repository, offset, limit))
 
 
 @app.route('/dynamic/<project>/<repository>/tree/<rev>')
 def tree_root(project, repository, rev):
     offset = request.args.get('offset', 0, type=int)
     limit = request.args.get('limit', 100, type=int)
-    return jsonify(get_resources(project, repository, rev, '', offset, limit))
+    return jsonify(core.get_resources(project, repository, rev, '',
+                                      offset, limit))
 
 
 @app.route('/dynamic/<project>/<repository>/tree/<rev>/<path:path>')
 def tree(project, repository, rev, path):
     offset = request.args.get('offset', 0, type=int)
     limit = request.args.get('limit', 100, type=int)
-    return jsonify(get_resources(project, repository, rev, path,
-                                 offset, limit))
+    return jsonify(core.get_resources(project, repository, rev, path,
+                                      offset, limit))
 
 
 @app.route('/dynamic/<project>/<repository>/blob/<rev>/<path:path>',
            methods=['GET', 'POST'])
 def blob(project, repository, rev, path):
     if request.method == 'GET':
-        return jsonify(get_resource(project, repository, rev, path))
+        return jsonify(core.get_resource(project, repository, rev, path))
     else:
         parent = request.form.get('commit')
         content = request.form.get('content')
         message = request.form.get('message')
-        update_resource(project, repository, rev, path,
-                        content, message, parent)
+        core.update_resource(project, repository, rev, path,
+                             content, message, parent)
         return 'Resouce is updated successfully.', 200
 
 
 @app.route('/dynamic/<project>/<repository>/history')
 def history(project, repository):
-    return jsonify(get_history(project, repository))
+    return jsonify(core.get_history(project, repository))
 
 
 @app.route('/dynamic/<project>/<repository>/commits/<ref>')
 def commits_root(project, repository, ref):
     rev = request.args.get('commit', None)
     limit = request.args.get('limit', 30, type=int)
-    return jsonify(get_commits(project, repository, ref, rev, limit=limit))
+    return jsonify(core.get_commits(project, repository, ref, rev,
+                                    limit=limit))
 
 
 @app.route('/dynamic/<project>/<repository>/commits/<ref>/<path:path>')
 def commits(project, repository, ref, path):
     rev = request.args.get('commit', None)
     limit = request.args.get('limit', 30, type=int)
-    return jsonify(get_commits(project, repository, ref, rev,
-                               path, limit=limit))
+    return jsonify(core.get_commits(project, repository, ref, rev, path,
+                                    limit=limit))
 
 
 @app.route('/dynamic/<project>/<repository>/commit/<rev>')
 def commit(project, repository, rev):
-    return jsonify(get_commit(project, repository, rev))
+    return jsonify(core.get_commit(project, repository, rev))
 
 
 @app.errorhandler(500)
