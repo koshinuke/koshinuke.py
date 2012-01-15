@@ -12,6 +12,7 @@
 import logging
 from logging import FileHandler
 import os
+import re
 
 from flask import (Flask, request, render_template, abort, redirect, url_for,
                    session)
@@ -42,6 +43,9 @@ handler.setLevel(logging.__getattribute__(app.config['LOGLEVEL']))
 app.logger.addHandler(handler)
 
 
+PUBLIC_PATH = re.compile(r'/|/login|/static/.*|/favicon.ico')
+
+
 def get_initial_resources():
     resources = []
     for project in get_projects():
@@ -55,11 +59,12 @@ def get_initial_resources():
 
 @app.before_request
 def before_request():
-    # todo: check login
-    # todo: check csrf here
     if not app.testing:
         app.logger.info("access {0} from {1}".format(request.url,
                                                      request.remote_addr))
+    if not PUBLIC_PATH.match(request.path):
+        if not 'username' in session:
+            abort(401)
 
 
 @app.after_request
@@ -102,7 +107,6 @@ def logout():
 
 @app.route('/dynamic', methods=['POST'])
 def init():
-    # check login
     if not 'X-KoshiNuke' in request.headers or \
        request.headers['X-KoshiNuke'] != session['csrf_token']:
         abort(400)
