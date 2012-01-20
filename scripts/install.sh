@@ -69,10 +69,14 @@ sudo pip install -r requirements.txt
 
 # Download koshinuke client source code and closure-library
 echo "--- Download koshinuke client source code and closure-library ---"
+cd $APPLICATION_ROOT
+git clone git://github.com/koshinuke/koshinuke.git
 cd koshinuke
-git clone git://github.com/koshinuke/koshinuke.git static
-cd static
-git checkout origin/koshinuke.py
+TEMPLATE_DIR=$APPLICATION_ROOT/koshinuke.py/koshinuke/templates
+mkdir $TEMPLATE_DIR
+cp *.html $TEMPLATE_DIR
+cp static $APPLICATION_ROOT/koshinuke.py/koshinuke/ -R
+cd $APPLICATION_ROOT/koshinuke.py/koshinuke/static
 svn co http://closure-library.googlecode.com/svn/trunk/ closure-library
 
 # Complete
