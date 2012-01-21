@@ -5,14 +5,14 @@
     "tags": [
         {
             "path": "0.0.1",
-            "message": "1st%20commit.%0A",
+            "message": "1st commit.\n",
             "author": "knauthor",
             "name": "0.0.1",
             "timestamp": 1325828902
         },
         {
             "path": "0.0.2",
-            "message": "2nd%20commit.%0A",
+            "message": "2nd commit.\n",
             "author": "knauthor",
             "name": "0.0.2",
             "timestamp": 1325829170

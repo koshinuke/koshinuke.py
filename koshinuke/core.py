@@ -17,7 +17,6 @@ from pwd import getpwnam
 from shutil import rmtree
 from tempfile import mkdtemp
 from time import mktime
-from urllib import quote, unquote
 
 from git import Repo, NoSuchPathError, BadObject, GitCommandError
 
@@ -39,11 +38,11 @@ def get_repositories(project):
 
 def get_history(project, repository, days=30):
     now = datetime.today()
-    return [{'name': _urlencode(h.name),
-             'path': _urlencode(h.name),
+    return [{'name': h.name,
+             'path': h.name,
              'timestamp': h.commit.committed_date,
-             'author': _urlencode(h.commit.author.name),
-             'message': _urlencode(h.commit.message),
+             'author': h.commit.author.name,
+             'message': h.commit.message,
              'activities': [[int(mktime(
                                  (now - timedelta(days=i)).timetuple())),
                              h.commit.count(since='{0} days ago'.format(i + 1),
@@ -59,12 +58,12 @@ def get_resource(project, repository, rev, path):
     except KeyError:
         raise NotFoundError("path is not found: {0}".format(path))
     try:
-        content = _urlencode(blob.data_stream.read().decode('utf-8'))
+        content = blob.data_stream.read().decode('utf-8')
     except UnicodeDecodeError:
         raise NotFoundError("maybe, path specified tree: {0}".format(path))
     return {'commit': commit.hexsha,
-            'author': _urlencode(commit.author.name),
-            'message': _urlencode(commit.message),
+            'author': commit.author.name,
+            'message': commit.message,
             'timestamp': commit.committed_date,
             'contents': content}
 
@@ -93,8 +92,8 @@ def get_resources(project, repository, rev, path='', offset=0, limit=100):
             blobs[r.path] = r
 
     # setup dictionary object
-    result = [{'name': _urlencode(t.name),
-               'path': _urlencode('/'.join([rev, t.path])),
+    result = [{'name': t.name,
+               'path': '/'.join([rev, t.path]),
                'children': len(t.blobs) + len(t.trees),
                'type': 'tree'} for t in trees.values()]
     if not commit.parents:
@@ -140,20 +139,20 @@ def get_commit(project, repository, rev):
                 operation = 'rename'
             else:
                 operation = 'modify'
-            diff = {'a_path': _urlencode(d.a_blob.path),
-                    'b_path': _urlencode(d.b_blob.path),
+            diff = {'a_path': d.a_blob.path,
+                    'b_path': d.b_blob.path,
                     'operation': operation,
-                    'patch': _urlencode(d.diff.decode('utf-8'))}
+                    'patch': d.diff.decode('utf-8')}
             if operation == 'rename' or operation == 'modify':
                 diff.update({'content':
-                    _urlencode(d.b_blob.data_stream.read().decode('utf-8'))})
+                    d.b_blob.data_stream.read().decode('utf-8')})
             diffs.append(diff)
     return {'commit': rev, 'parent': [p.hexsha for p in parents],
             'diff': diffs, 'stats': {'files': commit.stats.files,
                                      'total': commit.stats.total},
             'timestamp': commit.committed_date,
-            'author': _urlencode(commit.author.name),
-            'message': _urlencode(commit.message)}
+            'author': commit.author.name,
+            'message': commit.message}
 
 
 def get_branches(project, repository, offset=0, limit=100):
@@ -184,7 +183,7 @@ def update_resource(project, repository, rev, path, content, message=None,
     except GitCommandError:
         pass  # branch already exists, maybe 'master'
     with open(os.path.join(cloned_repository_path, path), 'w') as f:
-        f.write(unquote(content.encode('utf-8')))
+        f.write(content.encode('utf-8'))
     repo.git.add('-A')
     try:
         if not message:
@@ -228,13 +227,13 @@ def create_project(project, username):
 
 def _get_ref(project, repository, ref, offset=0, limit=100):
     return {'host': Config.HOST,
-            'name': _urlencode(repository),
-            'path': _urlencode('/'.join([project, repository])),
-            ref: [{'name': _urlencode(r.name),
-                   'path': _urlencode(r.name),
+            'name': repository,
+            'path': '/'.join([project, repository]),
+            ref: [{'name': r.name,
+                   'path': r.name,
                    'timestamp': r.commit.committed_date,
-                   'author': _urlencode(r.commit.author.name),
-                   'message': _urlencode(r.commit.message)}
+                   'author': r.commit.author.name,
+                   'message': r.commit.message}
                   for r in _get_repo(
                       project, repository).__getattribute__(ref)[offset:limit]
                   ]}
@@ -271,21 +270,17 @@ def _commitdata(commit):
     return {'commit': commit.hexsha,
             'parent': [c.hexsha for c in commit.parents],
             'timestamp': commit.committed_date,
-            'author': _urlencode(commit.author.name),
-            'message': _urlencode(commit.message)}
+            'author': commit.author.name,
+            'message': commit.message}
 
 
 def _blobdata(blob, commit, rev):
-    return {'name': _urlencode(blob.name),
-            'path': _urlencode('/'.join([rev, blob.path])),
+    return {'name': blob.name,
+            'path': '/'.join([rev, blob.path]),
             'type': 'blob',
             'timestamp': commit.committed_date,
-            'author': _urlencode(commit.author.name),
-            'message': _urlencode(commit.message)}
-
-
-def _urlencode(strings):
-    return quote(strings.encode('utf-8')).decode('utf-8')
+            'author': commit.author.name,
+            'message': commit.message}
 
 
 class NotFoundError(Exception):

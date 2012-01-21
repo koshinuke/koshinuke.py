@@ -5,7 +5,7 @@
         "author": "knauthor",
         "timestamp": 1325829170,
         "path": "develop",
-        "message": "2nd%20commit.%0A"
+        "message": "2nd commit.\n"
     },
     {
         "activities": [],
@@ -13,6 +13,6 @@
         "author": "knauthor",
         "timestamp": 1325836845,
         "path": "master",
-        "message": "3rd%20commit.%0A"
+        "message": "3rd commit.\n"
     }
 ]

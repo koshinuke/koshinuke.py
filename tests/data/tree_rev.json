@@ -4,7 +4,7 @@
         "author": "knauthor",
         "timestamp": 1325829170,
         "path": "98d540096e7d21f2e53b4e799fb851715ed17e85/sample.py",
-        "message": "2nd%20commit.%0A",
+        "message": "2nd commit.\n",
         "type": "blob"
     },
     {
@@ -12,7 +12,7 @@
         "author": "knauthor",
         "timestamp": 1325828902,
         "path": "98d540096e7d21f2e53b4e799fb851715ed17e85/README",
-        "message": "1st%20commit.%0A",
+        "message": "1st commit.\n",
         "type": "blob"
     }
 ]

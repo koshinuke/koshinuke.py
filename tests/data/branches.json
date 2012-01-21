@@ -4,14 +4,14 @@
     "branches": [
         {
             "path": "develop",
-            "message": "2nd%20commit.%0A",
+            "message": "2nd commit.\n",
             "author": "knauthor",
             "name": "develop",
             "timestamp": 1325829170
         },
         {
             "path": "master",
-            "message": "3rd%20commit.%0A",
+            "message": "3rd commit.\n",
             "author": "knauthor",
             "name": "master",
             "timestamp": 1325836845

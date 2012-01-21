@@ -1,7 +1,7 @@
 [
     {
         "commit": "be1ec338f8dae99056f360f107a34775fda8ae62",
-        "message": "3rd%20commit.%0A",
+        "message": "3rd commit.\n",
         "author": "knauthor",
         "parent": [
             "98d540096e7d21f2e53b4e799fb851715ed17e85"
