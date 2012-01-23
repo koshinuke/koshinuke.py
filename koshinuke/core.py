@@ -9,6 +9,7 @@
     :license: Apache License, Version 2.0, see LICENSE for more details.
 """
 
+from base64 import b64encode
 from datetime import datetime, timedelta
 from grp import getgrnam
 from itertools import chain
@@ -24,6 +25,7 @@ from config import Config
 
 
 _excluded_projects = set(Config.EXCLUDED_PROJECTS)
+_image_exts = set(['bmp', 'gif', 'png', 'jpg', 'jpeg', 'ico'])
 
 
 def get_projects():
@@ -57,10 +59,15 @@ def get_resource(project, repository, rev, path):
         blob = commit.tree[path]
     except KeyError:
         raise NotFoundError("path is not found: {0}".format(path))
-    try:
-        content = blob.data_stream.read().decode('utf-8')
-    except UnicodeDecodeError:
-        raise NotFoundError("maybe, path specified tree: {0}".format(path))
+    _, ext = os.path.splitext(path)
+    if ext in _image_exts:  # content is image
+        encoded_data = b64encode(blob.data_stream.read())
+        content = 'data:image/{0};base64,{1}'.format(ext, encoded_data)
+    else:  # content is text
+        try:
+            content = blob.data_stream.read().decode('utf-8')
+        except UnicodeDecodeError:
+            raise NotFoundError("maybe, path specified tree: {0}".format(path))
     return {'objectid': blob.hexsha,
             'author': commit.author.name,
             'message': commit.message,
