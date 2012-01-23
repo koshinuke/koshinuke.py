@@ -61,7 +61,7 @@ def get_resource(project, repository, rev, path):
         content = blob.data_stream.read().decode('utf-8')
     except UnicodeDecodeError:
         raise NotFoundError("maybe, path specified tree: {0}".format(path))
-    return {'commit': commit.hexsha,
+    return {'objectid': blob.hexsha,
             'author': commit.author.name,
             'message': commit.message,
             'timestamp': commit.committed_date,
@@ -164,17 +164,25 @@ def get_tags(project, repository, offset=0, limit=100):
 
 
 def update_resource(project, repository, rev, path, content, message=None,
-                    parent=None):
-    if not parent:
+                    objectid=None):
+    if not objectid:
         repo_is_empty = False
         try:
             _get_repo(project, repository).commit()
         except ValueError:  # repository is empty
             repo_is_empty = True
         if not repo_is_empty:
-            raise CanNotUpdateError("Repository is not empty. Specify parent.")
+            raise CanNotUpdateError("Repository is not empty. "
+                                    "Specify objectid.")
     else:
-        if parent != _get_commit(project, repository, rev).hexsha:
+        if not rev in set([h.name for h
+                           in _get_repo(project, repository).branches]):
+            raise CanNotUpdateError("Specify a branch name for rev.")
+        try:
+            blob = _get_commit(project, repository, rev).tree[path]
+        except KeyError:
+            raise CanNotUpdateError("Resource is not exist.")
+        if objectid != blob.hexsha:
             raise CanNotUpdateError("Resource is already updated.")
     cloned_repository_path = mkdtemp()
     repo = _get_repo(project, repository).clone(cloned_repository_path)

@@ -178,15 +178,14 @@ def tree(project, repository, rev, path):
 @app.route('/dynamic/<project>/<repository>/blob/<rev>/<path:path>',
            methods=['GET', 'POST'])
 def blob(project, repository, rev, path):
-    if request.method == 'GET':
-        return jsonify(core.get_resource(project, repository, rev, path))
-    else:
-        parent = request.form.get('commit')
-        content = request.form.get('content')
-        message = request.form.get('message')
+    if request.method == 'POST':
+        data = json.loads(request.data)
+        objectid = data.get('objectid')
+        content = data.get('contents')
+        message = data.get('message')
         core.update_resource(project, repository, rev, path,
-                             content, message, parent)
-        return 'Resouce is updated successfully.', 200
+                             content, message, objectid)
+    return jsonify(core.get_resource(project, repository, rev, path))
 
 
 @app.route('/dynamic/<project>/<repository>/history')
