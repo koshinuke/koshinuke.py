@@ -56,11 +56,11 @@ class UpdateTestCase(unittest.TestCase):
         utils.destroy_test_project()
 
     def test_update_resource(self):
-        parent = utils.get_test_current_rev()
+        objectid = utils.get_test_current_objectid()
         content = 'updated by test.'
         core.update_resource(utils.EXPECTED_PROJECT, utils.EXPECTED_REPOSITORY,
                              utils.EXPECTED_BRANCH, utils.EXPECTED_RESOURCE,
-                             content, parent=parent)
+                             content, objectid=objectid)
         assert utils.get_test_blob_content() == content
 
 

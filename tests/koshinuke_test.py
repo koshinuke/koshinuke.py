@@ -167,11 +167,11 @@ class AfterLoginTestCase(unittest.TestCase):
                                     utils.EXPECTED_BRANCH,
                                     utils.EXPECTED_RESOURCE]))
         content = 'updated by test.'
-        data = {'commit': utils.get_test_current_rev(), 'content': content}
+        data = json.dumps({'objectid': utils.get_test_current_objectid(),
+                           'contents': content})
         rv = self.app.post(get_path(['blob',
                                      utils.EXPECTED_BRANCH,
                                      utils.EXPECTED_RESOURCE]), data=data)
-        assert 'success' in rv.data
         assert utils.get_test_blob_content() == content
 
 

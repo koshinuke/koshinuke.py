@@ -59,8 +59,8 @@ def get_test_repository(repository=None):
     return Repo(_test_repository_path(repository))
 
 
-def get_test_current_rev():
-    return get_test_repository().commit().hexsha
+def get_test_current_objectid():
+    return get_test_repository().commit().tree[EXPECTED_RESOURCE].hexsha
 
 
 def get_test_blob_content():
