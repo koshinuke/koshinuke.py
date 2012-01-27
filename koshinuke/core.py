@@ -24,13 +24,13 @@ from git import Repo, NoSuchPathError, BadObject, GitCommandError
 from config import Config
 
 
-_excluded_projects = set(Config.EXCLUDED_PROJECTS)
-_image_exts = set(['bmp', 'gif', 'png', 'jpg', 'jpeg', 'ico'])
+_EXCLUDED_PROJECTS = set(Config.EXCLUDED_PROJECTS)
+_IMAGE_EXTS = set(['bmp', 'gif', 'png', 'jpg', 'jpeg', 'ico'])
 
 
 def get_projects():
     projects = set([project for project in os.listdir(Config.PROJECT_ROOT)])
-    return list(projects.difference(_excluded_projects))
+    return list(projects.difference(_EXCLUDED_PROJECTS))
 
 
 def get_repositories(project):
@@ -60,7 +60,7 @@ def get_resource(project, repository, rev, path):
     except KeyError:
         raise NotFoundError("path is not found: {0}".format(path))
     _, ext = os.path.splitext(path)
-    if ext in _image_exts:  # content is image
+    if ext in _IMAGE_EXTS:  # content is image
         encoded_data = b64encode(blob.data_stream.read())
         content = 'data:image/{0};base64,{1}'.format(ext, encoded_data)
     else:  # content is text
@@ -238,7 +238,7 @@ def create_project(project, username):
     gid = getgrnam(Config.USER_GROUP)[2]
     os.chown(path, uid, gid)
     os.chmod(path, 0770)
-    
+
 
 def _get_ref(project, repository, ref, offset=0, limit=100):
     return {'host': Config.HOST,
