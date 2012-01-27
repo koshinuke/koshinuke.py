@@ -181,7 +181,7 @@ def blob(project, repository, rev, path):
     if request.method == 'POST':
         data = json.loads(request.data)
         objectid = data.get('objectid')
-        content = data.get('contents')
+        content = data.get('content')
         message = data.get('message')
         core.update_resource(project, repository, rev, path,
                              content, message, objectid)

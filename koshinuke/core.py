@@ -72,7 +72,7 @@ def get_resource(project, repository, rev, path):
             'author': commit.author.name,
             'message': commit.message,
             'timestamp': commit.committed_date,
-            'contents': content}
+            'content': content}
 
 
 def get_resources(project, repository, rev, path='', offset=0, limit=100):
@@ -146,12 +146,13 @@ def get_commit(project, repository, rev):
                 operation = 'rename'
             else:
                 operation = 'modify'
-            diff = {'a_path': d.a_blob.path,
-                    'b_path': d.b_blob.path,
+            diff = {'newpath': d.a_blob.path,
+                    'oldpath': d.b_blob.path,
                     'operation': operation,
-                    'patch': d.diff.decode('utf-8')}
+                    'patch': '\n'.join(d.diff.splitlines()[3:]).decode('utf-8')
+                    }
             if operation == 'rename' or operation == 'modify':
-                diff.update({'content':
+                diff.update({'content':  # return old content
                     d.b_blob.data_stream.read().decode('utf-8')})
             diffs.append(diff)
     return {'commit': rev, 'parent': [p.hexsha for p in parents],
