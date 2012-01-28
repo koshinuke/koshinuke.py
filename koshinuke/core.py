@@ -152,8 +152,10 @@ def get_commit(project, repository, rev):
                     'patch': '\n'.join(d.diff.splitlines()[3:]).decode('utf-8')
                     }
             if operation == 'rename' or operation == 'modify':
-                diff.update({'content':  # return old content
-                    d.b_blob.data_stream.read().decode('utf-8')})
+                diff.update({
+                    'newcontent': d.a_blob.data_stream.read().decode('utf-8'),
+                    'oldcontent': d.b_blob.data_stream.read().decode('utf-8')
+                    })
             diffs.append(diff)
     return {'commit': rev, 'parent': [p.hexsha for p in parents],
             'diff': diffs, 'stats': {'files': commit.stats.files,
