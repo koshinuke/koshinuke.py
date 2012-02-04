@@ -149,7 +149,7 @@ def get_commit(project, repository, rev):
             diff = {'newpath': d.a_blob.path,
                     'oldpath': d.b_blob.path,
                     'operation': operation,
-                    'patch': '\n'.join(d.diff.splitlines()[3:]).decode('utf-8')
+                    'patch': '\n'.join(d.diff.splitlines()[2:]).decode('utf-8')
                     }
             if operation == 'rename' or operation == 'modify':
                 diff.update({
