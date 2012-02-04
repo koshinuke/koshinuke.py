@@ -90,27 +90,29 @@ def after_request(response):
 @app.route('/')
 def index():
     if not 'username' in session:
+        return redirect(url_for('login'))
+    csrf_token = generate_csrf_token()
+    session['csrf_token'] = csrf_token
+    return render_template('repos.html',
+                           csrf=csrf_token, name=session['username'])
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'GET':
         csrf_token = generate_csrf_token()
         session['csrf_token'] = csrf_token
         return render_template('login.html', csrf=csrf_token)
-    else:
-        csrf_token = generate_csrf_token()
-        session['csrf_token'] = csrf_token
-        return render_template('repos.html',
-                               csrf=csrf_token, name=session['username'])
-
-
-@app.route('/login', methods=['POST'])
-def login():
-    csrf_token = request.form.get('t')
-    if not 'csrf_token' in session or csrf_token != session['csrf_token']:
-        abort(400)
-    username = request.form.get('u')
-    password = request.form.get('p')
-    if authenticate(username, password):
-        session.regenerate()
-        session['username'] = username
-    return redirect(url_for('index'))
+    else:        
+        csrf_token = request.form.get('t')
+        if not 'csrf_token' in session or csrf_token != session['csrf_token']:
+            abort(400)
+        username = request.form.get('u')
+        password = request.form.get('p')
+        if authenticate(username, password):
+            session.regenerate()
+            session['username'] = username
+        return redirect(url_for('index'))
 
 
 @app.route('/logout')
@@ -119,30 +121,28 @@ def logout():
     return redirect(url_for('index'))
 
 
-@app.route('/dynamic', methods=['POST'])
-def init():
-    if not 'X-KoshiNuke' in request.headers or \
-       request.headers['X-KoshiNuke'] != session['csrf_token']:
-        abort(400)
-    project_and_repo_name = request.form.get('rn')
-    readme = request.form.get('rr')
-
-    separator = project_and_repo_name.find('/')
-    project = project_and_repo_name[:separator]
-    repository = project_and_repo_name[separator + 1:]
-    username = session['username']
-
-    core.create_project(project, username)
-    core.create_repository(project, repository, username, readme)
-    return jsonify(get_initial_resources())
-
-
-@app.route('/dynamic/')
+@app.route('/dynamic/', methods=['GET', 'POST'])
 def dynamic():
-    if request.headers['Accept'] == 'application/json':
+    if request.method == 'GET':
+        if request.headers['Accept'] == 'application/json':
+            return jsonify(get_initial_resources())
+        else:
+            return redirect(url_for('index'))
+    else:  # create initial repository.
+        if not 'X-KoshiNuke' in request.headers or \
+           request.headers['X-KoshiNuke'] != session['csrf_token']:
+            abort(400)
+        project_and_repo_name = request.form.get('rn')
+        readme = request.form.get('rr')
+
+        separator = project_and_repo_name.find('/')
+        project = project_and_repo_name[:separator]
+        repository = project_and_repo_name[separator + 1:]
+        username = session['username']
+
+        core.create_project(project, username)
+        core.create_repository(project, repository, username, readme)
         return jsonify(get_initial_resources())
-    else:
-        return redirect(url_for('index'))
 
 
 @app.route('/dynamic/<project>/<repository>/branches')
