@@ -116,7 +116,8 @@ def get_resources(project, repository, rev, path='', offset=0, limit=100):
     return result
 
 
-def get_commits(project, repository, ref, rev=None, path='', limit=30):
+def get_commits(project, repository, ref, rev=None, path='',
+                offset=0, limit=30):
     commits = []
     if rev:
         child = _get_commit(project, repository, rev)
@@ -125,7 +126,7 @@ def get_commits(project, repository, ref, rev=None, path='', limit=30):
         commits.append(_commitdata(child))
         limit -= 1
     commits.extend([_commitdata(p) for p in child.iter_parents(
-        paths=path, max_count=limit, first_parent=True)])
+        paths=path, max_count=limit, skip=(offset + 1), first_parent=True)])
     return commits
 
 

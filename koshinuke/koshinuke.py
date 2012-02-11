@@ -196,17 +196,19 @@ def history(project, repository):
 @app.route('/dynamic/<project>/<repository>/commits/<ref>')
 def commits_root(project, repository, ref):
     rev = request.args.get('commit', None)
+    offset = request.args.get('offset', 0, type=int)
     limit = request.args.get('limit', 30, type=int)
     return jsonify(core.get_commits(project, repository, ref, rev,
-                                    limit=limit))
+                                    offset=offset, limit=limit))
 
 
 @app.route('/dynamic/<project>/<repository>/commits/<ref>/<path:path>')
 def commits(project, repository, ref, path):
     rev = request.args.get('commit', None)
+    offset = request.args.get('offset', 0, type=int)
     limit = request.args.get('limit', 30, type=int)
     return jsonify(core.get_commits(project, repository, ref, rev, path,
-                                    limit=limit))
+                                    offset=offset, limit=limit))
 
 
 @app.route('/dynamic/<project>/<repository>/commit/<rev>')
