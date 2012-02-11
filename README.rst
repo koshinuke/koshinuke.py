@@ -1,6 +1,5 @@
-============
-koshinuke.py
-============
+What is koshinuke.py?
+=====================
 
 koshinuke.py is python implementation of the server side for KoshiNuke.
 

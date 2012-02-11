@@ -3,7 +3,7 @@
 from grp import getgrnam
 import os
 from pwd import getpwnam
-from shutil import copy, copytree
+from shutil import copy, copytree, rmtree
 from subprocess import call
 import sys
 from tempfile import mkdtemp
@@ -11,7 +11,7 @@ from tempfile import mkdtemp
 from setuptools import Command
 
 
-class EnvBuild(Command):
+class KoshinukeBuild(Command):
     description = 'Build the koshinuke environment'
     user_options = []
 
@@ -97,13 +97,15 @@ class EnvBuild(Command):
         for t in templates:
             copy(t, templates_dir)
         static_dir = os.path.join(src_root, 'static')
-        copytree('static', static_dir)
-        os.chdir(static_dir)
-        call(['svn', 'co', 'http://closure-library.googlecode.com/svn/trunk/',
-              'closure-library', '-q'])
-
+        if not os.path.exists(static_dir):
+            copytree('static', static_dir)
+            os.chdir(static_dir)
+            call(['svn', 'co',
+                  'http://closure-library.googlecode.com/svn/trunk/',
+                  'closure-library', '-q'])
         change_owner(templates_dir, uid, gid)
         change_owner(static_dir, uid, gid)
+        rmtree(tmpdir)
 
 
 def change_owner(path, uid, gid):
