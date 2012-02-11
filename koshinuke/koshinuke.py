@@ -103,7 +103,7 @@ def login():
         csrf_token = generate_csrf_token()
         session['csrf_token'] = csrf_token
         return render_template('login.html', csrf=csrf_token)
-    else:        
+    else:
         csrf_token = request.form.get('t')
         if not 'csrf_token' in session or csrf_token != session['csrf_token']:
             abort(400)
@@ -214,6 +214,11 @@ def commits(project, repository, ref, path):
 @app.route('/dynamic/<project>/<repository>/commit/<rev>')
 def commit(project, repository, rev):
     return jsonify(core.get_commit(project, repository, rev))
+
+
+@app.route('/dynamic/<project>/<repository>/blame/<rev>/<path:path>')
+def blame(project, repository, rev, path):
+    return jsonify(core.get_blame(project, repository, rev, path))
 
 
 @app.errorhandler(500)

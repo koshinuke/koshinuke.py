@@ -15,6 +15,7 @@ from grp import getgrnam
 from itertools import chain
 import os
 from pwd import getpwnam
+import re
 from shutil import rmtree
 from tempfile import mkdtemp
 from time import mktime
@@ -26,6 +27,8 @@ from config import Config
 
 _EXCLUDED_PROJECTS = set(Config.EXCLUDED_PROJECTS)
 _IMAGE_EXTS = set(['bmp', 'gif', 'png', 'jpg', 'jpeg', 'ico'])
+
+_BLAME_REGEXP = re.compile(r'\^?(.*) \(.*\) (.*)')
 
 
 def get_projects():
@@ -166,6 +169,31 @@ def get_commit(project, repository, rev):
             'message': commit.message}
 
 
+def get_blame(project, repository, rev, path):
+    cloned_repository_path = mkdtemp()
+    repo = _get_repo(project, repository).clone(cloned_repository_path)
+    try:
+        repo.git.checkout('-b', rev, 'remotes/origin/{0}'.format(rev))
+    except GitCommandError:
+        pass  # branch already exists, maybe 'master'
+    try:
+        result = repo.git.blame(path, '-l')
+    except GitCommandError:
+        raise NotFoundError("path is invalid: {0}".format(path))
+    blame = []
+    for line in result.splitlines():
+        m = _BLAME_REGEXP.match(line)
+        c = repo.commit(m.group(1))
+        blame.append({
+            'content': m.group(2),
+            'timestamp': c.committed_date,
+            'author': c.author.name,
+            'message': c.message
+        })
+    rmtree(cloned_repository_path)
+    return blame
+
+
 def get_branches(project, repository, offset=0, limit=100):
     return _get_ref(project, repository, 'branches', offset, limit)
 
@@ -198,7 +226,7 @@ def update_resource(project, repository, rev, path, content, message=None,
     cloned_repository_path = mkdtemp()
     repo = _get_repo(project, repository).clone(cloned_repository_path)
     try:
-        repo.git.checkout("-b", rev, 'remotes/origin/{0}'.format(rev))
+        repo.git.checkout('-b', rev, 'remotes/origin/{0}'.format(rev))
     except GitCommandError:
         pass  # branch already exists, maybe 'master'
     with open(os.path.join(cloned_repository_path, path), 'w') as f:
