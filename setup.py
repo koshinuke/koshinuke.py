@@ -12,7 +12,7 @@ of the server side for KoshiNuke."""
 cmdclass = {}
 
 from setup_env import KoshinukeBuild
-cmdclass['build_ex'] = KoshinukeBuild
+cmdclass['build_env'] = KoshinukeBuild
 
 setup(
     name='koshinuke.py',
