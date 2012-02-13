@@ -161,7 +161,7 @@ def get_commit(project, repository, rev):
                     'oldcontent': d.b_blob.data_stream.read().decode('utf-8')
                     })
             diffs.append(diff)
-    return {'commit': rev, 'parent': [p.hexsha for p in parents],
+    return {'commit': rev, 'parents': [p.hexsha for p in parents],
             'diff': diffs, 'stats': {'files': commit.stats.files,
                                      'total': commit.stats.total},
             'timestamp': commit.committed_date,
@@ -312,7 +312,7 @@ def _get_project_path(project):
 
 def _commitdata(commit):
     return {'commit': commit.hexsha,
-            'parent': [c.hexsha for c in commit.parents],
+            'parents': [c.hexsha for c in commit.parents],
             'timestamp': commit.committed_date,
             'author': commit.author.name,
             'message': commit.message}
