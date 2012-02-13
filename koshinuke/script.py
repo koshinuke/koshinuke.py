@@ -16,35 +16,24 @@ import auth
 import core
 
 
-def usage():
-    print("usage: script.py <add-user | create-project | create-repo>")
+def add_user():
+    username = raw_input('User Name:')
+    password = getpass.getpass()
+    auth_key = raw_input('Auth Key:')
+    auth.add_user(username, password, auth_key)
+    print("A user is added: {0}".format(username))
 
 
-if __name__ == '__main__':
-    args = sys.argv
+def add_project():
+    project = raw_input('Project:')
+    username = raw_input('User Name:')
+    core.create_project(project, username)
+    print("A project is added: {0}".format(project))
 
-    if len(args) != 2:
-        usage()
-        sys.exit(0)
 
-    command = args[1]
-
-    if command == 'add-user':
-        username = raw_input('User Name:')
-        password = getpass.getpass()
-        auth_key = raw_input('Auth Key:')
-        auth.add_user(username, password, auth_key)
-        print("{0} is added.".format(username))
-    elif command == 'create-project':
-        project = raw_input('Project:')
-        username = raw_input('User Name:')
-        core.create_project(project, username)
-        print("{0} is created.".format(project))
-    elif command == 'create-repo':
-        project = raw_input('Project:')
-        repository = raw_input('Repository:')
-        username = raw_input('User Name:')
-        core.create_repository(project, repository, username)
-        print("{0} is created.".format(repository))
-    else:
-        usage()
+def add_repository():
+    project = raw_input('Project:')
+    repository = raw_input('Repository:')
+    username = raw_input('User Name:')
+    core.create_repository(project, repository, username)
+    print("A repository is added: {0}/{1}".format(project, repository))

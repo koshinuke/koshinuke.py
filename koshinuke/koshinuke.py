@@ -34,13 +34,16 @@ app = Flask(__name__)
 store = DictStore()
 KVSessionExtension(store, app)
 
+
 # configuration
 app.config.from_object(Config)
+
 
 # logger setting
 handler = FileHandler(app.config['LOGFILE'], encoding='utf-8')
 handler.setLevel(logging.__getattribute__(app.config['LOGLEVEL']))
 app.logger.addHandler(handler)
+
 
 # constants and helper functions
 _MAX_CSRF_KEY = 18446744073709551616L

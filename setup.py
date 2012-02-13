@@ -26,7 +26,13 @@ setup(
     install_requires=[
         'Flask',
         'Flask-KVSession',
-        "GitPython",
+        'GitPython',
     ],
-    cmdclass=cmdclass
+    cmdclass=cmdclass,
+    entry_points="""
+    [console_scripts]
+    kn_add_user = koshinuke.script:add_user
+    kn_add_proj = koshinuke.script:add_project
+    kn_add_repo = koshinuke.script:add_repository
+    """,
 )
