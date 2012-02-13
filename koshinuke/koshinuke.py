@@ -9,6 +9,7 @@
     :license: Apache License, Version 2.0, see LICENSE for more details.
 """
 
+from functools import wraps
 import hashlib
 import json
 import logging
@@ -42,7 +43,6 @@ handler.setLevel(logging.__getattribute__(app.config['LOGLEVEL']))
 app.logger.addHandler(handler)
 
 # constants and helper functions
-PUBLIC_PATH = re.compile(r'/|/login|/static/.*|/favicon.ico')
 _MAX_CSRF_KEY = 18446744073709551616L
 if hasattr(random, 'SystemRandom'):
     randrange = random.SystemRandom().randrange
@@ -52,6 +52,15 @@ else:
 
 def jsonify(data):
     return json.dumps(data, ensure_ascii=False)
+
+
+def login_required(f):
+    @wraps(f)
+    def inner(*args, **kwargs):
+        if not session.get('username'):
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return inner
 
 
 def generate_csrf_token():
@@ -76,9 +85,6 @@ def before_request():
     if not app.testing:
         app.logger.info("access {0} from {1}".format(request.url,
                                                      request.remote_addr))
-    if not PUBLIC_PATH.match(request.path):
-        if not 'username' in session:
-            abort(401)
 
 
 @app.after_request
@@ -116,12 +122,14 @@ def login():
 
 
 @app.route('/logout')
+@login_required
 def logout():
     session.destroy()
     return redirect(url_for('index'))
 
 
 @app.route('/dynamic/', methods=['GET', 'POST'])
+@login_required
 def dynamic():
     if request.method == 'GET':
         if request.headers['Accept'] == 'application/json':
@@ -146,6 +154,7 @@ def dynamic():
 
 
 @app.route('/dynamic/<project>/<repository>/branches')
+@login_required
 def branches(project, repository):
     offset = request.args.get('offset', 0, type=int)
     limit = request.args.get('limit', 100, type=int)
@@ -153,6 +162,7 @@ def branches(project, repository):
 
 
 @app.route('/dynamic/<project>/<repository>/tags')
+@login_required
 def tags(project, repository):
     offset = request.args.get('offset', 0, type=int)
     limit = request.args.get('limit', 100, type=int)
@@ -160,6 +170,7 @@ def tags(project, repository):
 
 
 @app.route('/dynamic/<project>/<repository>/tree/<rev>')
+@login_required
 def tree_root(project, repository, rev):
     offset = request.args.get('offset', 0, type=int)
     limit = request.args.get('limit', 100, type=int)
@@ -168,6 +179,7 @@ def tree_root(project, repository, rev):
 
 
 @app.route('/dynamic/<project>/<repository>/tree/<rev>/<path:path>')
+@login_required
 def tree(project, repository, rev, path):
     offset = request.args.get('offset', 0, type=int)
     limit = request.args.get('limit', 100, type=int)
@@ -177,6 +189,7 @@ def tree(project, repository, rev, path):
 
 @app.route('/dynamic/<project>/<repository>/blob/<rev>/<path:path>',
            methods=['GET', 'POST'])
+@login_required
 def blob(project, repository, rev, path):
     if request.method == 'POST':
         data = json.loads(request.data)
@@ -189,11 +202,13 @@ def blob(project, repository, rev, path):
 
 
 @app.route('/dynamic/<project>/<repository>/history')
+@login_required
 def history(project, repository):
     return jsonify(core.get_history(project, repository))
 
 
 @app.route('/dynamic/<project>/<repository>/commits/<ref>')
+@login_required
 def commits_root(project, repository, ref):
     rev = request.args.get('commit', None)
     offset = request.args.get('offset', 0, type=int)
@@ -203,6 +218,7 @@ def commits_root(project, repository, ref):
 
 
 @app.route('/dynamic/<project>/<repository>/commits/<ref>/<path:path>')
+@login_required
 def commits(project, repository, ref, path):
     rev = request.args.get('commit', None)
     offset = request.args.get('offset', 0, type=int)
@@ -212,11 +228,13 @@ def commits(project, repository, ref, path):
 
 
 @app.route('/dynamic/<project>/<repository>/commit/<rev>')
+@login_required
 def commit(project, repository, rev):
     return jsonify(core.get_commit(project, repository, rev))
 
 
 @app.route('/dynamic/<project>/<repository>/blame/<rev>/<path:path>')
+@login_required
 def blame(project, repository, rev, path):
     return jsonify(core.get_blame(project, repository, rev, path))
 
