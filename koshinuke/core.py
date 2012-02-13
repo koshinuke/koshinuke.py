@@ -184,12 +184,9 @@ def get_blame(project, repository, rev, path):
     for line in result.splitlines():
         m = _BLAME_REGEXP.match(line)
         c = repo.commit(m.group(1))
-        blame.append({
-            'content': m.group(2),
-            'timestamp': c.committed_date,
-            'author': c.author.name,
-            'message': c.message
-        })
+        data = _commitdata(c)
+        data.update({'content': m.group(2)})
+        blame.append(data)
     rmtree(cloned_repository_path)
     return blame
 
