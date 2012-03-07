@@ -146,16 +146,28 @@ def dynamic():
         if not 'X-KoshiNuke' in request.headers or \
            request.headers['X-KoshiNuke'] != session['csrf_token']:
             abort(400)
-        project_and_repo_name = request.form.get('rn')
-        readme = request.form.get('rr')
+        mode = request.form.get('!')
+        if mode == 'init':
+            project_and_repo_name = request.form.get('rn')
+            readme = request.form.get('rr')
 
-        separator = project_and_repo_name.find('/')
-        project = project_and_repo_name[:separator]
-        repository = project_and_repo_name[separator + 1:]
-        username = session['username']
+            separator = project_and_repo_name.find('/')
+            project = project_and_repo_name[:separator]
+            repository = project_and_repo_name[separator + 1:]
+            username = session['username']
 
-        core.create_project(project, username)
-        core.create_repository(project, repository, username, readme)
+            core.create_project(project, username)
+            core.create_repository(project, repository, username, readme)
+        else:  # mode == 'clone'
+            repo_uri = request.form.get('repo-uri')
+            repo_username = request.form.get('un')
+            repo_password = request.form.get('up')
+
+            username = session['username']
+            
+            core.clone_remote_repository(repo_uri,
+                                         repo_username, repo_password,
+                                         username)
         return jsonify(get_initial_resources())
 
 

@@ -17,8 +17,10 @@ import os
 from pwd import getpwnam
 import re
 from shutil import rmtree
+from subprocess import call
 from tempfile import mkdtemp
 from time import mktime
+from urlparse import urlparse
 
 from git import Repo, NoSuchPathError, BadObject, GitCommandError
 
@@ -267,6 +269,19 @@ def create_project(project, username):
     gid = getgrnam(Config.USER_GROUP)[2]
     os.chown(path, uid, gid)
     os.chmod(path, 0770)
+
+
+def clone_remote_repository(repo_uri, repo_username, repo_password, username):
+    # check: where project can i clone to?
+    parsed = urlparse(repo_uri)
+    project = parsed.netloc
+    create_project(project, username)
+    tmpwd = os.getcwd()
+    os.chdir(_get_project_path(project))
+    uri = ''.join([parsed.scheme, '://', repo_username, ':', repo_password,
+                   '@', parsed.netloc, parsed.path])
+    call(['git', 'clone', uri, '--bare'])
+    # todo: about authorization
 
 
 def _get_ref(project, repository, ref, offset=0, limit=100):
