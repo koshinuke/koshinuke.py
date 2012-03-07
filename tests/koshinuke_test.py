@@ -23,8 +23,11 @@ from koshinuke import koshinuke
 from koshinuke.config import Config
 
 
+API_VERSION = '1.0'
+
 def get_path(path):
-    paths = ['', 'dynamic', utils.EXPECTED_PROJECT, utils.EXPECTED_REPOSITORY]
+    paths = ['', 'api/{0}'.format(API_VERSION),
+             utils.EXPECTED_PROJECT, utils.EXPECTED_REPOSITORY]
     paths.extend(path)
     return '/'.join(paths)
 
