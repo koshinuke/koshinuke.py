@@ -256,6 +256,8 @@ def create_repository(project, repository, username, readme=None):
 
 def create_project(project, username):
     path = _get_project_path(project)
+    if os.path.exists(path):
+        return
     os.mkdir(path)
     _set_permission(path, username)
 
@@ -268,12 +270,14 @@ def clone_remote_repository(repo_uri, repo_username, repo_password, username):
     if repository.endswith('.git'):
         repository = repository[:-4]
     path = _get_repository_path(project, repository)
-
     create_project(project, username)
-    uri = ''.join([parsed.scheme, '://', repo_username, ':', repo_password,
-                   '@', parsed.netloc, parsed.path])
+    if parsed.scheme == 'git':
+        uri = ''.join([parsed.scheme, '://', parsed.netloc, parsed.path])
+    else:
+        uri = ''.join([parsed.scheme, '://',
+                       repo_username, ':', repo_password, '@',
+                       parsed.netloc, parsed.path])
     call(['git', 'clone', '--bare', uri, path])
-
     _set_permission(path, username)
 
 
