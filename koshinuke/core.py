@@ -251,37 +251,30 @@ def create_repository(project, repository, username, readme=None):
         readme = Config.DEFAULT_README
     update_resource(project, repository, 'master', 'README', readme,
                     Config.CREATE_MESSAGE)
-    uid = getpwnam(username)[2]
-    gid = getgrnam(Config.USER_GROUP)[2]
-    for root, dirs, files in os.walk(path):
-        for d in dirs:
-            os.chown(os.path.join(root, d), uid, gid)
-            os.chmod(os.path.join(root, d), 0770)
-        for f in files:
-            os.chown(os.path.join(root, f), uid, gid)
-            os.chmod(os.path.join(root, f), 0660)
+    _set_permission(path, username)
 
 
 def create_project(project, username):
     path = _get_project_path(project)
     os.mkdir(path)
-    uid = getpwnam(username)[2]
-    gid = getgrnam(Config.USER_GROUP)[2]
-    os.chown(path, uid, gid)
-    os.chmod(path, 0770)
+    _set_permission(path, username)
 
 
 def clone_remote_repository(repo_uri, repo_username, repo_password, username):
     # check: where project can i clone to?
     parsed = urlparse(repo_uri)
     project = parsed.netloc
+    repository = parsed.path.split('/')[-1]
+    if repository.endswith('.git'):
+        repository = repository[:-4]
+    path = _get_repository_path(project, repository)
+
     create_project(project, username)
-    tmpwd = os.getcwd()
-    os.chdir(_get_project_path(project))
     uri = ''.join([parsed.scheme, '://', repo_username, ':', repo_password,
                    '@', parsed.netloc, parsed.path])
-    call(['git', 'clone', uri, '--bare'])
-    # todo: about authorization
+    call(['git', 'clone', '--bare', uri, path])
+
+    _set_permission(path, username)
 
 
 def _get_ref(project, repository, ref, offset=0, limit=100):
@@ -340,6 +333,27 @@ def _blobdata(blob, commit, rev):
             'timestamp': commit.committed_date,
             'author': commit.author.name,
             'message': commit.message}
+
+
+def _set_permission(path, username):
+    uid = getpwnam(username)[2]
+    gid = getgrnam(Config.USER_GROUP)[2]
+    _set_permission_to_dir(path, uid, gid)
+    for root, dirs, files in os.walk(path):
+        for d in dirs:
+            _set_permission_to_dir(os.path.join(root, d), uid, gid)
+        for f in files:
+            _set_permission_to_file(os.path.join(root, f), uid, gid)
+
+
+def _set_permission_to_dir(path, uid, gid):
+    os.chown(path, uid, gid)
+    os.chmod(path, 0770)
+
+
+def _set_permission_to_file(path, uid, gid):
+    os.chown(path, uid, gid)
+    os.chmod(path, 0660)
 
 
 class NotFoundError(Exception):

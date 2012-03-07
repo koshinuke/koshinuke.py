@@ -59,6 +59,7 @@ class KoshinukeBuild(Command):
         with open(sshd_config, 'a') as f:
             f.write(config)
         call(['service', 'ssh', 'restart'])
+        # todo: check it that has been already modified by koshinuke setup
 
         # Copy bash, git, git-upload-pack, git-receive-pack, 
         # and necessary objects for using git on chroot. 
