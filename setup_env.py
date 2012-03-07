@@ -36,7 +36,7 @@ class KoshinukeBuild(Command):
         
         # Install necessary tools
         print("Install tools.")
-        tools = 'git', 'subversion'
+        tools = 'git-core', 'subversion'
         for t in tools:
             call(['aptitude', 'install', t, '-y'])
 

@@ -53,6 +53,9 @@ else:
     randrange = random.randrange
 
 
+API_VERSION = '1.0'
+
+
 def jsonify(data):
     return json.dumps(data, ensure_ascii=False)
 
@@ -131,7 +134,7 @@ def logout():
     return redirect(url_for('index'))
 
 
-@app.route('/dynamic/', methods=['GET', 'POST'])
+@app.route('/api/{0}/'.format(API_VERSION), methods=['GET', 'POST'])
 @login_required
 def dynamic():
     if request.method == 'GET':
@@ -156,7 +159,7 @@ def dynamic():
         return jsonify(get_initial_resources())
 
 
-@app.route('/dynamic/<project>/<repository>/branches')
+@app.route('/api/{0}/<project>/<repository>/branches'.format(API_VERSION))
 @login_required
 def branches(project, repository):
     offset = request.args.get('offset', 0, type=int)
@@ -164,7 +167,7 @@ def branches(project, repository):
     return jsonify(core.get_branches(project, repository, offset, limit))
 
 
-@app.route('/dynamic/<project>/<repository>/tags')
+@app.route('/api/{0}/<project>/<repository>/tags'.format(API_VERSION))
 @login_required
 def tags(project, repository):
     offset = request.args.get('offset', 0, type=int)
@@ -172,7 +175,7 @@ def tags(project, repository):
     return jsonify(core.get_tags(project, repository, offset, limit))
 
 
-@app.route('/dynamic/<project>/<repository>/tree/<rev>')
+@app.route('/api/{0}/<project>/<repository>/tree/<rev>'.format(API_VERSION))
 @login_required
 def tree_root(project, repository, rev):
     offset = request.args.get('offset', 0, type=int)
@@ -181,7 +184,8 @@ def tree_root(project, repository, rev):
                                       offset, limit))
 
 
-@app.route('/dynamic/<project>/<repository>/tree/<rev>/<path:path>')
+@app.route('/api/{0}/<project>/<repository>/tree/<rev>/<path:path>'\
+           .format(API_VERSION))
 @login_required
 def tree(project, repository, rev, path):
     offset = request.args.get('offset', 0, type=int)
@@ -190,7 +194,8 @@ def tree(project, repository, rev, path):
                                       offset, limit))
 
 
-@app.route('/dynamic/<project>/<repository>/blob/<rev>/<path:path>',
+@app.route('/api/{0}/<project>/<repository>/blob/<rev>/<path:path>'\
+           .format(API_VERSION),
            methods=['GET', 'POST'])
 @login_required
 def blob(project, repository, rev, path):
@@ -204,13 +209,13 @@ def blob(project, repository, rev, path):
     return jsonify(core.get_resource(project, repository, rev, path))
 
 
-@app.route('/dynamic/<project>/<repository>/history')
+@app.route('/api/{0}/<project>/<repository>/history'.format(API_VERSION))
 @login_required
 def history(project, repository):
     return jsonify(core.get_history(project, repository))
 
 
-@app.route('/dynamic/<project>/<repository>/commits/<ref>')
+@app.route('/api/{0}/<project>/<repository>/commits/<ref>'.format(API_VERSION))
 @login_required
 def commits_root(project, repository, ref):
     rev = request.args.get('commit', None)
@@ -220,7 +225,8 @@ def commits_root(project, repository, ref):
                                     offset=offset, limit=limit))
 
 
-@app.route('/dynamic/<project>/<repository>/commits/<ref>/<path:path>')
+@app.route('/api/{0}/<project>/<repository>/commits/<ref>/<path:path>'\
+           .format(API_VERSION))
 @login_required
 def commits(project, repository, ref, path):
     rev = request.args.get('commit', None)
@@ -230,13 +236,14 @@ def commits(project, repository, ref, path):
                                     offset=offset, limit=limit))
 
 
-@app.route('/dynamic/<project>/<repository>/commit/<rev>')
+@app.route('/api/{0}/<project>/<repository>/commit/<rev>'.format(API_VERSION))
 @login_required
 def commit(project, repository, rev):
     return jsonify(core.get_commit(project, repository, rev))
 
 
-@app.route('/dynamic/<project>/<repository>/blame/<rev>/<path:path>')
+@app.route('/api/{0}/<project>/<repository>/blame/<rev>/<path:path>'\
+           .format(API_VERSION))
 @login_required
 def blame(project, repository, rev, path):
     return jsonify(core.get_blame(project, repository, rev, path))
