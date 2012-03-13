@@ -12,7 +12,7 @@
 # Install necessary tools
 echo "--- Install necessary tools ---"
 sudo aptitude install git -y
-sudo aptitude install python-pip -y
+sudo aptitude install python-setuptools -y
 sudo aptitude install subversion  -y  # for checkout closure-library
 
 # Create koshinuke user group
@@ -65,7 +65,7 @@ sudo chgrp $USER $APPLICATION_ROOT
 cd $APPLICATION_ROOT
 git clone git://github.com/koshinuke/koshinuke.py.git
 cd koshinuke.py
-sudo pip install -r requirements.txt
+sudo python setup.py install
 
 # Download koshinuke client source code and closure-library
 echo "--- Download koshinuke client source code and closure-library ---"
@@ -77,7 +77,7 @@ mkdir $TEMPLATE_DIR
 cp *.html $TEMPLATE_DIR
 cp static $APPLICATION_ROOT/koshinuke.py/koshinuke/ -R
 cd $APPLICATION_ROOT/koshinuke.py/koshinuke/static
-svn co http://closure-library.googlecode.com/svn/trunk/ closure-library
+svn co -q http://closure-library.googlecode.com/svn/trunk/ closure-library
 
 # Complete
 echo "KoshiNuke is installed."

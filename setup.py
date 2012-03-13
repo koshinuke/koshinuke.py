@@ -9,11 +9,6 @@ with open('README.rst') as f:
 description = """koshinuke.py is python implementation \
 of the server side for KoshiNuke."""
 
-cmdclass = {}
-
-from setup_env import KoshinukeBuild
-cmdclass['build_env'] = KoshinukeBuild
-
 setup(
     name='koshinuke.py',
     version='0.1',
@@ -28,11 +23,10 @@ setup(
         'Flask-KVSession',
         'GitPython',
     ],
-    cmdclass=cmdclass,
     entry_points="""
     [console_scripts]
-    kn_add_user = koshinuke.script:add_user
-    kn_add_proj = koshinuke.script:add_project
-    kn_add_repo = koshinuke.script:add_repository
+    kn-adduser = koshinuke.script:add_user
+    kn-addproj = koshinuke.script:add_project
+    kn-addrepo = koshinuke.script:add_repository
     """,
 )
