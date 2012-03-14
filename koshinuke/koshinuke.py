@@ -159,7 +159,7 @@ def dynamic():
             core.create_project(project, username)
             core.create_repository(project, repository, username, readme)
         else:  # mode == 'clone'
-            repo_uri = request.form.get('repo-uri')
+            repo_uri = request.form.get('uri')
             repo_username = request.form.get('un')
             repo_password = request.form.get('up')
 
