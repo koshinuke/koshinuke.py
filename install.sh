@@ -9,6 +9,8 @@
 # This script is tested on Ubuntu Server 10.10 in Amazon EC2 (ami-dcb400dd).
 # A password may be required for sudo.
 
+USER_GROUP=knusers
+
 # Install necessary tools
 echo "--- Install necessary tools ---"
 sudo aptitude install git -y
@@ -17,7 +19,7 @@ sudo aptitude install subversion  -y  # for checkout closure-library
 
 # Create koshinuke user group
 echo "--- Create koshinuke user group ---"
-sudo addgroup knusers
+sudo addgroup $USER_GROUP
 
 # Create project root
 echo "--- Create project root ---"
@@ -28,7 +30,7 @@ sudo chgrp $USER $PROJECT_ROOT
 
 # Setting chroot for koshinuke users
 echo "--- Setting chroot for koshinuke users ---"
-echo "Match Group knusers" | sudo tee -a /etc/ssh/sshd_config
+echo "Match Group $USER_GROUP" | sudo tee -a /etc/ssh/sshd_config
 echo "  ChrootDirectory /var/koshinuke" | sudo tee -a /etc/ssh/sshd_config
 sudo service ssh restart
 
@@ -65,6 +67,7 @@ sudo chgrp $USER $APPLICATION_ROOT
 cd $APPLICATION_ROOT
 git clone git://github.com/koshinuke/koshinuke.py.git
 cd koshinuke.py
+#git checkout develop
 sudo python setup.py install
 
 # Download koshinuke client source code and closure-library
@@ -73,7 +76,6 @@ cd $APPLICATION_ROOT
 git clone git://github.com/koshinuke/koshinuke.git
 cd koshinuke
 TEMPLATE_DIR=$APPLICATION_ROOT/koshinuke.py/koshinuke/templates
-mkdir $TEMPLATE_DIR
 cp *.html $TEMPLATE_DIR
 cp static $APPLICATION_ROOT/koshinuke.py/koshinuke/ -R
 cd $APPLICATION_ROOT/koshinuke.py/koshinuke/static
