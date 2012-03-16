@@ -9,7 +9,20 @@
     :license: Apache License, Version 2.0, see LICENSE for more details.
 """
 
+import socket
+import urllib2
 
+
+# helper functions
+def find_host(is_public):
+    if is_public:
+        ip = urllib2.urlopen('http://ipcheck.ieserver.net').read()
+        return socket.gethostbyaddr(ip)[0]
+    else:
+        return socket.gethostname()
+
+
+# configurations
 class BaseConfig(object):
     USER_GROUP = 'knusers'
 
@@ -50,5 +63,10 @@ class DevelopmentConfig(BaseConfig):
     LOGLEVEL = 'DEBUG'
 
 
+class AutoConfig(DevelopmentConfig):
+    HOST = find_host(is_public=True)
+    PORT = 80
+
+
 # mode
-Config = DevelopmentConfig
+Config = AutoConfig
