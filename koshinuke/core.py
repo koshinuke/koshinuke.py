@@ -28,7 +28,7 @@ from config import Config
 
 
 _EXCLUDED_PROJECTS = set(Config.EXCLUDED_PROJECTS)
-_IMAGE_EXTS = set(['bmp', 'gif', 'png', 'jpg', 'jpeg', 'ico'])
+_IMAGE_EXTS = set(['.bmp', '.gif', '.png', '.jpg', '.jpeg', '.ico'])
 
 _BLAME_REGEXP = re.compile(r'\^?(.*) \(.*\) (.*)')
 
